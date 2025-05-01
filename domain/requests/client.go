@@ -12,11 +12,11 @@ type RegisterClient struct {
 }
 
 func (c *RegisterClient) GetDiscriminator() string {
-	return "client_registered"
+	return "hydn://domain/requests/register_client"
 }
 
 func (e *RegisterClient) GetRoute() messaging.Route {
-	return messaging.NewTenantRoute("slugs", "reserved", &e.TenantID)
+	return messaging.NewTenantRoute("client", "register", &e.TenantID)
 }
 
 type EnableClient struct {

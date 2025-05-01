@@ -11,16 +11,16 @@ func TestShouldRegisterDiscriminator(t *testing.T) {
 
 	// Arrange
 	var expectedEntities = map[string]Entity{
-		"hydn://catalog/v1/entities/account-permission": &AccountPermission{},
-		"hydn://catalog/v1/entities/account-role":       &AccountRole{},
+		"hydn://catalog/v1/entities/account_permission": &AccountPermission{},
+		"hydn://catalog/v1/entities/account_role":       &AccountRole{},
 		"hydn://catalog/v1/entities/account":            &Account{},
 		"hydn://catalog/v1/entities/application":        &Application{},
-		"hydn://catalog/v1/entities/group-member":       &GroupMember{},
-		"hydn://catalog/v1/entities/group-permission":   &GroupPermission{},
-		"hydn://catalog/v1/entities/group-role":         &GroupRole{},
+		"hydn://catalog/v1/entities/group_member":       &GroupMember{},
+		"hydn://catalog/v1/entities/group_permission":   &GroupPermission{},
+		"hydn://catalog/v1/entities/group_role":         &GroupRole{},
 		"hydn://catalog/v1/entities/group":              &Group{},
-		"hydn://catalog/v1/entities/multi-factor":       &MultiFactor{},
-		"hydn://catalog/v1/entities/network-object":     &NetworkObject{},
+		"hydn://catalog/v1/entities/multi_factor":       &MultiFactor{},
+		"hydn://catalog/v1/entities/network_object":     &NetworkObject{},
 		"hydn://catalog/v1/entities/permission":         &Permission{},
 		"hydn://catalog/v1/entities/role":               &Role{},
 	}
@@ -42,16 +42,16 @@ func TestShouldHaveSpace(t *testing.T) {
 
 	// Arrange
 	var expectedEntities = map[string]Entity{
-		"account-permissions": &AccountPermission{},
-		"account-roles":       &AccountRole{},
+		"account_permissions": &AccountPermission{},
+		"account_roles":       &AccountRole{},
 		"accounts":            &Account{},
 		"applications":        &Application{},
-		"group-members":       &GroupMember{},
-		"group-permissions":   &GroupPermission{},
-		"group-roles":         &GroupRole{},
+		"group_members":       &GroupMember{},
+		"group_permissions":   &GroupPermission{},
+		"group_roles":         &GroupRole{},
 		"groups":              &Group{},
-		"multi-factors":       &MultiFactor{},
-		"network-objects":     &NetworkObject{},
+		"multi_factors":       &MultiFactor{},
+		"network_objects":     &NetworkObject{},
 		"permissions":         &Permission{},
 		"roles":               &Role{},
 	}
