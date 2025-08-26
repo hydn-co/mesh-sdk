@@ -6,8 +6,8 @@ github.com/fgrzl/enumerators v0.0.0-20250410102914-6a54f0117505 h1:qm0V7nCd2UaOm
 github.com/fgrzl/enumerators v0.0.0-20250410102914-6a54f0117505/go.mod h1:Pynok/rNO4rJm01+5BLFXVdhSBpRDrjrJoASzpisCkc=
 github.com/fgrzl/es v0.0.0-20250501132443-78c951391684 h1:4/uoctvgR67oUzanvTf2QkIaXnL8tgIZZIIzQzFDVFg=
 github.com/fgrzl/es v0.0.0-20250501132443-78c951391684/go.mod h1:n2d7nTXA8rQLV8dN9FwrZS/gLirHwwowIC44D/J3CFQ=
-github.com/fgrzl/json v0.0.0-20250414172401-2714459e8922 h1:2en3jiEdn/kCG3YQKR+UYfadW+qPp0kHHy3lllp+ecA=
-github.com/fgrzl/json v0.0.0-20250414172401-2714459e8922/go.mod h1:L7IAn4wOCSsQGJ44XZePleqf7/tAZPgBDC6A3Egv9e8=
+github.com/fgrzl/json v0.1.0-alpha.52 h1:sOktDvJR/5CV+rcqjrYrf+ELZIU2q/z9WczG6SJUG1M=
+github.com/fgrzl/json v0.1.0-alpha.52/go.mod h1:uhY90IO9L/wJ4qXdqHBS0PLC14YlwrpUMU8O2D9YGxQ=
 github.com/fgrzl/lexkey v0.0.0-20250404134045-06756616f02b h1:C8VidHCs+ETGfWPKmilU/5XlrkMmBl8XZEtSUQSPNwU=
 github.com/fgrzl/lexkey v0.0.0-20250404134045-06756616f02b/go.mod h1:DfrNX28YpZvrxyDm+jYQ6Jv2pJbZxQoMS1dcBSwBv58=
 github.com/fgrzl/messaging v0.0.0-20250429181503-f370a02dc6fe h1:7DcXivkLZFNCWrkQqWLsKukKG89xa4T9MNZlDyjttDY=
