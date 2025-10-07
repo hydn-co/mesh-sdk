@@ -5,6 +5,8 @@ import (
 	"errors"
 )
 
+// Host manages the lifecycle of multiple services. It starts services and
+// records them so they can later be stopped as a group.
 type Host interface {
 	StartServices(ctx context.Context, services ...Service) error
 	Stop(ctx context.Context) error
@@ -14,6 +16,7 @@ type defaultHost struct {
 	services []Service
 }
 
+// NewHost returns a new, empty lifecycle Host.
 func NewHost() Host {
 	m := &defaultHost{
 		services: make([]Service, 0),
@@ -21,7 +24,9 @@ func NewHost() Host {
 	return m
 }
 
-// Start will attempt to start the service or return an error
+// StartServices starts each provided Service in order. If any service fails to
+// start, the error is returned immediately and previously started services are
+// left running.
 func (h *defaultHost) StartServices(ctx context.Context, services ...Service) error {
 
 	for _, service := range services {
@@ -35,6 +40,7 @@ func (h *defaultHost) StartServices(ctx context.Context, services ...Service) er
 	return nil
 }
 
+// Stop stops all previously started services and aggregates any errors.
 func (m *defaultHost) Stop(ctx context.Context) error {
 	var errs []error
 

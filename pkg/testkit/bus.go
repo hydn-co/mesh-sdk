@@ -8,12 +8,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// NewMockMessageBus instantiates a new mock message bus that supports stubbing and assertions.
+// NewMockMessageBus instantiates a new mock message bus for use in tests.
+// The returned object embeds testify's Mock and provides helper methods for expectations.
 func NewMockMessageBus() *MockMessageBus {
 	return &MockMessageBus{}
 }
 
-// ConfigureBusFactory lets you specify the bus the factory should return
+// ConfigureBusFactory returns a messaging.MessageBusFactory that always returns the
+// provided mock bus. Useful for injecting a stubbed bus into code under test.
 func ConfigureBusFactory(bus messaging.MessageBus) messaging.MessageBusFactory {
 	return &MockBusFactory{
 		bus: bus,

@@ -31,12 +31,15 @@ jobs:
 
       - name: install dependencies
         run: go mod tidy
+
+      - name: go vet
+        run: go vet ./...
       
       - name: build
         run: go build ./...
 
       - name: test
-        run: go test ./... -v -coverprofile=coverage.out
+        run: go test ./... -timeout 30s
 
       - name: workflow cleanup
         uses: fgrzl/workflow-cleanup@v1 

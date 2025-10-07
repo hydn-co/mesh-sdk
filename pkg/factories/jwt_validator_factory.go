@@ -21,14 +21,19 @@ var (
 	keyMu           sync.RWMutex
 )
 
+// GetValidator returns a jwtkit.Validator backed by the auth-server's JWKS.
+// The function caches the first-found RSA public key in memory. For production
+// use-cases a more complete JWKS client (kid-aware, refresh-on-expiry) is
+// recommended; this function implements a minimal, pragmatic approach for the
+// SDK.
 func GetValidator() (jwtkit.Validator, error) {
 	if pk := getCachedPublicKey(); pk != nil {
 		return &jwtkit.RSAValidator{PublicKey: pk}, nil
 	}
 
-	// Fetch JWKS from auth server well-known endpoint
-	portal := env.GetEnvOrDefaultStr(env.MeshPortalURL, "http://localhost:8080")
-	jwksURL := strings.TrimRight(portal, "/") + "/.well-known/jwks.json"
+	// Fetch JWKS from auth server well-known endpoint.
+	base := env.GetEnvOrDefaultStr(env.MeshAuthBaseURL, "http://localhost:8080")
+	jwksURL := strings.TrimRight(base, "/") + "/.well-known/jwks.json"
 	pk, err := fetchFirstRSAFromJWKS(jwksURL)
 	if err != nil {
 		return nil, fmt.Errorf("fetch jwks from %s: %w", jwksURL, err)
@@ -54,7 +59,9 @@ func setCachedPublicKey(pk *rsa.PublicKey) {
 }
 
 // fetchFirstRSAFromJWKS fetches a JWKS from the given URL and returns the
-// first RSA public key it contains.
+// first RSA public key it contains. This helper is intentionally simple and
+// returns the first RSA key found; callers that require key rotation or
+// `kid` selection should replace this with a full JWKS client.
 func fetchFirstRSAFromJWKS(jwksURL string) (*rsa.PublicKey, error) {
 	resp, err := http.Get(jwksURL)
 	if err != nil {

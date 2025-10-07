@@ -11,13 +11,18 @@ import (
 	"github.com/hydn-co/mesh-sdk/pkg/lifecycle"
 )
 
+// Manager is a lifecycle.Service that manages distributed leases. It
+// registers request handlers on the message bus to respond to Acquire,
+// Renew and Release requests.
 type Manager struct {
 	messaging.Processor
 	mu     sync.Mutex
 	busf   messaging.MessageBusFactory
-	leases map[uuid.UUID]map[string]Lease // tenantID → key → lease
+	leases map[uuid.UUID]map[string]Lease // tenantID -> key -> lease
 }
 
+// NewManager constructs a lease Manager that will use the provided
+// messaging.MessageBusFactory to register handlers when started.
 func NewManager(busf messaging.MessageBusFactory) lifecycle.Service {
 	return &Manager{
 		busf:   busf,

@@ -7,39 +7,37 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hydn-co/mesh-sdk/pkg/tenantkit"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithLease_ContextValidation(t *testing.T) {
-	// Test that WithLease properly validates context
+	// Arrange
 	ctx := context.Background()
 
+	// Act
 	err := WithLease(ctx, nil, "test-key", time.Minute, 1, nil)
-	if err == nil {
-		t.Error("Expected error when context missing tenant ID")
-	}
+
+	// Assert
+	assert.Error(t, err)
 }
 
 func TestWithLease_WithValidContext(t *testing.T) {
-	// Test WithLease with a valid tenant context
+	// Arrange
 	tenantID := uuid.New()
 	ctx := tenantkit.WithTenantID(context.Background(), tenantID)
-
-	// This would need a mock client for full testing
 	client := &mockLeaseClient{}
 
+	// Act
 	executed := false
 	err := WithLease(ctx, client, "test-key", time.Minute, 1, func(ctx context.Context) error {
 		executed = true
 		return nil
 	})
 
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	if !executed {
-		t.Error("Expected function to be executed")
-	}
+	// Assert
+	require.NoError(t, err)
+	assert.True(t, executed)
 }
 
 // Mock lease client for testing

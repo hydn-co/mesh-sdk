@@ -8,22 +8,25 @@ import (
 	"github.com/google/uuid"
 )
 
+// Package env contains helpers and canonical environment variable names used
+// across the SDK. Tests and factories should prefer these helpers instead of
+// calling os.LookupEnv directly so behavior is consistent across the codebase.
+
 // Environment variable names used across the project.
 const (
-	// Azure
-	AzureKeyVaultURL = "AZURE_KEY_VAULT_URL"
+	// New explicit BASE_URL names
+	MeshAuthBaseURL   = "MESH_AUTH_BASE_URL"
+	MeshPortalBaseURL = "MESH_PORTAL_BASE_URL"
+	MeshStreamBaseURL = "MESH_STREAM_BASE_URL"
 
-	// Mesh-specific
-	MeshJWTKeySecretName = "MESH_JWT_KEY_SECRET_NAME"
-	MeshPortalURL        = "MESH_PORTAL_URL"
-	MeshStreamURL        = "MESH_STREAM_URL"
-	MeshClientID         = "MESH_CLIENT_ID"
-	MeshClientSecret     = "MESH_CLIENT_SECRET"
-	MeshSeed             = "MESH_SEED"
+	// Client
+	MeshClientID     = "MESH_CLIENT_ID"
+	MeshClientSecret = "MESH_CLIENT_SECRET"
+	MeshClientSeed   = "MESH_CLIENT_SEED"
 )
 
-// ─── String ─────────────────────────────────────────────────────
-
+// GetEnvOrDefaultStr returns the value of the environment variable or the
+// provided default if the variable is not set.
 func GetEnvOrDefaultStr(key string, defaultValue string) string {
 	if v, ok := os.LookupEnv(key); ok {
 		return v
@@ -31,11 +34,15 @@ func GetEnvOrDefaultStr(key string, defaultValue string) string {
 	return defaultValue
 }
 
+// TryGetEnvStr returns the value and a boolean indicating presence.
 func TryGetEnvStr(key string) (string, bool) {
 	v, ok := os.LookupEnv(key)
 	return v, ok
 }
 
+// MustGetEnvStr returns the value or panics if the variable is not set. This
+// is convenient for test initialization where missing configuration should
+// fail fast.
 func MustGetEnvStr(key string) string {
 	if v, ok := os.LookupEnv(key); ok {
 		return v
@@ -43,6 +50,8 @@ func MustGetEnvStr(key string) string {
 	panic("required env var not set: " + key)
 }
 
+// TryGetEnvStrSlice splits a comma-separated environment variable into a
+// string slice. Returns false if the variable is not set.
 func TryGetEnvStrSlice(key string) ([]string, bool) {
 	if v, ok := os.LookupEnv(key); ok {
 		return strings.Split(v, ","), true

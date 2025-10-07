@@ -16,12 +16,17 @@ var (
 	ErrLeaseExpired = errors.New("cannot renew: lease already expired")
 )
 
+// Client is a convenience wrapper for interacting with the lease Manager
+// over the messaging bus. It provides synchronous helper methods for
+// acquiring, renewing and releasing leases.
 type Client interface {
 	Acquire(ctx context.Context, tenantID uuid.UUID, key string, ttl time.Duration, maxAttempts int) (*Lease, error)
 	Renew(ctx context.Context, lease *Lease) error
 	Release(ctx context.Context, lease *Lease) error
 }
 
+// NewLeaseClient creates a new Client that communicates with the lease
+// Manager using the provided messaging.MessageBusFactory.
 func NewLeaseClient(busFactory messaging.MessageBusFactory) Client {
 	return &client{busFactory: busFactory}
 }

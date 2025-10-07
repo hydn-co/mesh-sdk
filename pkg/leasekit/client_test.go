@@ -13,6 +13,7 @@ import (
 )
 
 func TestLeaseClient_Acquire(t *testing.T) {
+	// Arrange
 	bus := testkit.NewMockMessageBus()
 	bus.Mock.On("RequestWithContext",
 		mock.Anything,
@@ -30,13 +31,17 @@ func TestLeaseClient_Acquire(t *testing.T) {
 	ttl := time.Second
 	maxAttempts := 1
 
+	// Act
 	lease, err := client.Acquire(context.Background(), tenantID, key, ttl, maxAttempts)
+
+	// Assert
 	assert.NoError(t, err)
-	assert.NotNil(t, lease, "Expected lease to be non-nil")
-	assert.Equal(t, key, lease.Key, "Expected lease with key %q, got %+v", key, lease)
+	assert.NotNil(t, lease)
+	assert.Equal(t, key, lease.Key)
 }
 
 func TestLeaseClient_Renew(t *testing.T) {
+	// Arrange
 	bus := testkit.NewMockMessageBus()
 	bus.Mock.On("RequestWithContext",
 		mock.Anything,
@@ -51,11 +56,16 @@ func TestLeaseClient_Renew(t *testing.T) {
 	client := NewLeaseClient(busf)
 	// Set ExpireAt to a future time to ensure lease is not expired
 	lease := &Lease{ID: uuid.New(), Key: "test-key", TTL: time.Second, ExpireAt: time.Now().Add(time.Minute)}
+
+	// Act
 	err := client.Renew(context.Background(), lease)
-	assert.NoError(t, err, "Renew returned error")
+
+	// Assert
+	assert.NoError(t, err)
 }
 
 func TestLeaseClient_Release(t *testing.T) {
+	// Arrange
 	bus := testkit.NewMockMessageBus()
 	bus.Mock.On("RequestWithContext",
 		mock.Anything,
@@ -69,6 +79,10 @@ func TestLeaseClient_Release(t *testing.T) {
 	busf := testkit.ConfigureBusFactory(bus)
 	client := NewLeaseClient(busf)
 	lease := &Lease{ID: uuid.New(), Key: "test-key"}
+
+	// Act
 	err := client.Release(context.Background(), lease)
-	assert.NoError(t, err, "Release returned error")
+
+	// Assert
+	assert.NoError(t, err)
 }

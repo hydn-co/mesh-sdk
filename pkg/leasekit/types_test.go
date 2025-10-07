@@ -17,5 +17,6 @@ var leasekitTypes = map[string]any{
 }
 
 func TestShouldRegisterPolymorphicLeasekitTypes(t *testing.T) {
+	// Arrange/Act/Assert: delegate to shared testkit helper
 	testkit.TestPolymorphicRegistrations(t, leasekitTypes)
 }

@@ -7,7 +7,10 @@ import (
 	"time"
 )
 
-// acquireFileLock tries to create a lock file, and removes stale locks if necessary.
+// AcquireFileLock creates a simple file-based lock at the provided path.
+// If the lock already exists, it will treat locks older than a small
+// threshold as stale and remove them. The function returns an error if it
+// cannot acquire the lock after multiple attempts.
 func AcquireFileLock(path string) error {
 	const maxAge = 5 * time.Second
 

@@ -21,7 +21,10 @@ import (
 	"github.com/nats-io/nkeys"
 )
 
-// MessageBusOptions holds all the necessary configuration for message bus factory
+// MessageBusOptions holds all the necessary configuration for message bus factory.
+//
+// Fields left zero-valued will be replaced with sensible defaults by the
+// factory (for example AuthAttempts, AuthBaseDelay, MaxAuthRespBytes).
 type MessageBusOptions struct {
 	TenantID          uuid.UUID
 	ClientCredentials localstore.ClientCredentials
@@ -44,7 +47,9 @@ func init() {
 	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
-// NewMessageBusFactory initializes a new factory that creates or reuses a MessageBus instance.
+// NewMessageBusFactory initializes a new factory that creates or reuses a
+// MessageBus instance. The returned factory is safe for concurrent use and
+// will lazily establish the underlying connection when Get is called.
 func NewMessageBusFactory(opts MessageBusOptions) messaging.MessageBusFactory {
 	return &DefaultMessageBusFactory{
 		tenantID:         opts.TenantID,

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/fgrzl/streamkit"
 	"github.com/fgrzl/streamkit/pkg/transport/wskit"
@@ -15,16 +16,26 @@ import (
 	"github.com/hydn-co/mesh-sdk/pkg/localstore"
 )
 
+// NewStreamkitClientFactory builds a streamkit.ClientFactory configured to
+// authenticate against the mesh portal using the provided tenant credentials.
+// The returned factory uses environment variables to discover the portal and
+// stream endpoints and will perform an HTTP call to obtain a JWT when
+// establishing connections.
 func NewStreamkitClientFactory(tenantID uuid.UUID, creds localstore.ClientCredentials) streamkit.ClientFactory {
+	// Resolve auth base URL: prefer new BASE_URL env, fall back to legacy var.
+	authBase := env.GetEnvOrDefaultStr(env.MeshPortalBaseURL, "http://localhost:8080")
 	return &DefaultStreamkitClientFactory{
 		tenantID:     tenantID,
 		clientID:     creds.ClientID,
 		clientSecret: creds.ClientSecret,
-		authURL:      env.GetEnvOrDefaultStr(env.MeshPortalURL, "http://localhost:8080") + "/auth/stream/user",
-		streamURL:    env.GetEnvOrDefaultStr(env.MeshStreamURL, "ws://localhost:9444"),
+		authURL:      strings.TrimRight(authBase, "/") + "/auth/stream/user",
+		streamURL:    env.GetEnvOrDefaultStr(env.MeshStreamBaseURL, "ws://localhost:9444"),
 	}
 }
 
+// DefaultStreamkitClientFactory is the default implementation of
+// streamkit.ClientFactory used by the SDK. It obtains a JWT from the portal
+// auth endpoint and uses it when creating websocket stream connections.
 type DefaultStreamkitClientFactory struct {
 	tenantID     uuid.UUID
 	clientID     uuid.UUID

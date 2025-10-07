@@ -6,7 +6,9 @@ import (
 	"os"
 )
 
-// CaptureOutput captures stdout while running the given function.
+// CaptureOutput captures stdout while running the given function and returns
+// the captured output and any error returned by the function. This is useful
+// for testing CLI-style code paths that write to stdout.
 func CaptureOutput(fn func() error) (string, error) {
 	orig := os.Stdout
 	r, w, _ := os.Pipe()

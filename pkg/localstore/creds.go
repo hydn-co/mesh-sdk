@@ -28,17 +28,12 @@ type credsFile struct {
 	Seed         []byte    `json:"seed"`
 }
 
-// LoadOrCreateCreds ensures a single creds file is safely created and loaded,
-// using a self-healing lock mechanism to tolerate crashes or race conditions.
-// LoadOrCreateCreds ensures a single creds file is safely created and loaded,
-// using a self-healing lock mechanism to tolerate crashes or race conditions.
+// LoadOrCreateCreds ensures a single creds file is safely created and loaded.
+// It first attempts to read credentials from environment variables and falls
+// back to a tenant-scoped file. The function acquires a simple file-based
+// lock during creation to avoid races between concurrent processes.
 //
-// Behavior:
-//   - First attempts to load credentials from environment variables
-//     (MESH_CLIENT_ID, MESH_CLIENT_SECRET, MESH_SEED). When loading from
-//     environment, MESH_SEED must be the printable nkeys seed string (the
-//     value returned by KeyPair.Seed()). If not present or invalid, falls
-//     back to file-based credentials stored at the tenant-specific path.
+// Environment variables used: MESH_CLIENT_ID, MESH_CLIENT_SECRET, MESH_SEED
 func LoadOrCreateCreds(tenantID uuid.UUID) (ClientCredentials, error) {
 	if creds, ok := tryLoadFromEnv(); ok {
 		return creds, nil
@@ -73,7 +68,7 @@ func tryLoadFromEnv() (ClientCredentials, bool) {
 	// Require an explicit seed when loading credentials from environment.
 	// If MESH_SEED is not provided or invalid, treat env loading as absent
 	// so the caller will fall back to file-based credentials.
-	if seedStr, ok := env.TryGetEnvStr(env.MeshSeed); ok {
+	if seedStr, ok := env.TryGetEnvStr(env.MeshClientSeed); ok {
 		// nkeys seed is typically a printable ASCII value. We accept
 		// the raw env string here; callers should provide the seed as
 		// produced by KeyPair.Seed(). If you store seeds encoded in
