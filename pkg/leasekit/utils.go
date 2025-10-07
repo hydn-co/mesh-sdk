@@ -5,13 +5,13 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/hydn-co/mesh-sdk/pkg/tenantkit"
+	"github.com/hydn-co/mesh-sdk/pkg/meshctx"
 )
 
 // WithLease acquires a lease and runs fn with a context that is canceled when fn completes or the lease is lost.
 func WithLease(ctx context.Context, client Client, key string, ttl time.Duration, maxAttempts int, fn func(context.Context) error) error {
 
-	tenantID, err := tenantkit.TenantIDFromContext(ctx)
+	tenantID, err := meshctx.TenantIDFromContext(ctx)
 	if err != nil {
 		return err
 	}

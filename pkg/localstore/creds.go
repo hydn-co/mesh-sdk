@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hydn-co/mesh-sdk/pkg/env"
-	"github.com/hydn-co/mesh-sdk/pkg/secretkit"
+	"github.com/hydn-co/mesh-sdk/pkg/secrets"
 	"github.com/nats-io/nkeys"
 )
 
@@ -123,7 +123,7 @@ func createAndStoreCreds(path string) (ClientCredentials, error) {
 
 	creds := credsFile{
 		ClientID:     uuid.New(),
-		ClientSecret: secretkit.GenerateToken(),
+		ClientSecret: secrets.GenerateToken(),
 		Seed:         seed,
 	}
 

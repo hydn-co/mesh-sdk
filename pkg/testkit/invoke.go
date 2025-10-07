@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/hydn-co/mesh-sdk/pkg/meshctx"
 	"github.com/hydn-co/mesh-sdk/pkg/runner"
-	"github.com/hydn-co/mesh-sdk/pkg/tenantkit"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +14,7 @@ import (
 // context before invoking the runner.
 func InvokeDescribe(t *testing.T, manifest *runner.Manifest) {
 	t.Helper()
-	ctx := tenantkit.WithStreamPath(t.Context(), t.TempDir())
+	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
 
 	err := runner.RunWithArgs(ctx, manifest, "-describe")
 	assert.NoError(t, err)
@@ -25,7 +25,7 @@ func InvokeDescribe(t *testing.T, manifest *runner.Manifest) {
 // test assertions and will fail the test on error.
 func InvokeList(t *testing.T, manifest *runner.Manifest) {
 	t.Helper()
-	ctx := tenantkit.WithStreamPath(t.Context(), t.TempDir())
+	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
 
 	// derive expected list from manifest keys
 	var expected []string
@@ -52,7 +52,7 @@ func InvokeList(t *testing.T, manifest *runner.Manifest) {
 //	testkit.InvokeGenerate(t, manifest, "capability-id", connectorID, secretID)
 func InvokeGenerate(t *testing.T, manifest *runner.Manifest, capability, connectorID, secretID string) {
 	t.Helper()
-	ctx := tenantkit.WithStreamPath(t.Context(), t.TempDir())
+	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
 
 	err := runner.RunWithArgs(ctx, manifest,
 		"-generate",
@@ -67,7 +67,7 @@ func InvokeGenerate(t *testing.T, manifest *runner.Manifest, capability, connect
 // It fails the test on error. This helper is useful for smoke tests of runtime behavior.
 func InvokeRun(t *testing.T, manifest *runner.Manifest, capability, connectorID string) {
 	t.Helper()
-	ctx := tenantkit.WithStreamPath(t.Context(), t.TempDir())
+	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
 	err := runner.RunWithArgs(ctx, manifest,
 		"-run",
 		"-capability", capability,

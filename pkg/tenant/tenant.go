@@ -1,4 +1,4 @@
-package tenantkit
+package tenant
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/hydn-co/mesh-sdk/pkg/meshctx"
 )
 
-// Backwards-compatibility shim: delegate tenantkit API to the new meshctx package.
+// Backwards-compatibility shim: delegate tenant API to the new meshctx package.
 var ErrTenantIDMissing = meshctx.ErrTenantIDMissing
 
 func WithTenantID(ctx context.Context, tenantID uuid.UUID) context.Context {

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hydn-co/mesh-sdk/pkg/tenantkit"
+	"github.com/hydn-co/mesh-sdk/pkg/meshctx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +25,7 @@ func TestWithLease_ContextValidation(t *testing.T) {
 func TestWithLease_WithValidContext(t *testing.T) {
 	// Arrange
 	tenantID := uuid.New()
-	ctx := tenantkit.WithTenantID(context.Background(), tenantID)
+	ctx := meshctx.WithTenantID(context.Background(), tenantID)
 	client := &mockLeaseClient{}
 
 	// Act

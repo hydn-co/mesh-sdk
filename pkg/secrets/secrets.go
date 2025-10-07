@@ -1,5 +1,5 @@
 // Package secrets provides cryptographically secure secret generation.
-package secretkit
+package secrets
 
 import (
 	"crypto/rand"

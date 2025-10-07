@@ -1,4 +1,4 @@
-package secretkit
+package secrets
 
 import (
 	"golang.org/x/crypto/bcrypt"
