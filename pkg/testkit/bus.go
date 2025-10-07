@@ -26,6 +26,11 @@ type MockBusFactory struct {
 	bus messaging.MessageBus
 }
 
+// MockMessageBusFactory is a messaging.MessageBusFactory that returns a
+// preconstructed mock bus. Useful for injecting test doubles into code under
+// test.
+type MockMessageBusFactory = MockBusFactory
+
 func (f *MockBusFactory) Get(ctx context.Context) (messaging.MessageBus, error) {
 	return f.bus, nil
 }
@@ -33,6 +38,10 @@ func (f *MockBusFactory) Get(ctx context.Context) (messaging.MessageBus, error) 
 type MockMessageBus struct {
 	mock.Mock
 }
+
+// MockMessageBus is a testify-backed mock implementing messaging.MessageBus
+// for use in unit tests. Expectations can be configured via the embedded
+// Mock field.
 
 func (m *MockMessageBus) Notify(msg messaging.Message) error {
 	args := m.Called(msg)

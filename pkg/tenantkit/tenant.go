@@ -16,6 +16,8 @@ const (
 
 var ErrTenantIDMissing = errors.New("tenant ID not found in context")
 
+// ErrTenantIDMissing is returned when a tenant ID is absent from context.
+
 // WithTenantID adds a tenant UUID to the context.
 func WithTenantID(ctx context.Context, tenantID uuid.UUID) context.Context {
 	return context.WithValue(ctx, tenantKey, tenantID)

@@ -10,9 +10,14 @@ import (
 )
 
 var (
-	Empty           Lease
-	ErrInvalidTTL   = errors.New("invalid TTL")
-	ErrNilLease     = errors.New("invalid lease: nil")
+	// Empty is a zero-value Lease used for comparison and tests.
+	Empty Lease
+	// ErrInvalidTTL indicates an invalid TTL was provided to a lease operation.
+	ErrInvalidTTL = errors.New("invalid TTL")
+	// ErrNilLease indicates a nil lease pointer was passed to a client method.
+	ErrNilLease = errors.New("invalid lease: nil")
+	// ErrLeaseExpired indicates the target lease has already expired and
+	// cannot be renewed.
 	ErrLeaseExpired = errors.New("cannot renew: lease already expired")
 )
 
