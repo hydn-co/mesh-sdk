@@ -16,20 +16,40 @@ import (
 	"github.com/hydn-co/mesh-sdk/pkg/localstore"
 )
 
+// StreamkitClientOptions holds configuration for the streamkit client factory.
+//
+// Fields left zero-valued will be replaced with sensible defaults by the factory
+// (for example, AuthURL, StreamURL).
+type StreamkitClientOptions struct {
+	TenantID          uuid.UUID
+	ClientCredentials localstore.ClientCredentials
+	AuthURL           string
+	StreamURL         string
+	HTTPClient        *http.Client // Optional HTTP client for auth requests
+}
+
 // NewStreamkitClientFactory builds a streamkit.ClientFactory configured to
-// authenticate against the mesh portal using the provided tenant credentials.
+// authenticate against the mesh portal using the provided options struct.
 // The returned factory uses environment variables to discover the portal and
-// stream endpoints and will perform an HTTP call to obtain a JWT when
+// stream endpoints if not set in options, and will perform an HTTP call to obtain a JWT when
 // establishing connections.
-func NewStreamkitClientFactory(tenantID uuid.UUID, creds localstore.ClientCredentials) streamkit.ClientFactory {
-	// Resolve auth base URL: prefer new BASE_URL env, fall back to legacy var.
-	authBase := env.GetEnvOrDefaultStr(env.MeshPortalBaseURL, "http://localhost:8080")
+func NewStreamkitClientFactory(opts StreamkitClientOptions) streamkit.ClientFactory {
+	authURL := opts.AuthURL
+	if authURL == "" {
+		authBase := env.GetEnvOrDefaultStr(env.MeshPortalBaseURL, "http://localhost:8080")
+		authURL = strings.TrimRight(authBase, "/") + "/auth/stream/user"
+	}
+	streamURL := opts.StreamURL
+	if streamURL == "" {
+		streamURL = env.GetEnvOrDefaultStr(env.MeshStreamBaseURL, "ws://localhost:9444")
+	}
 	return &DefaultStreamkitClientFactory{
-		tenantID:     tenantID,
-		clientID:     creds.ClientID,
-		clientSecret: creds.ClientSecret,
-		authURL:      strings.TrimRight(authBase, "/") + "/auth/stream/user",
-		streamURL:    env.GetEnvOrDefaultStr(env.MeshStreamBaseURL, "ws://localhost:9444"),
+		tenantID:     opts.TenantID,
+		clientID:     opts.ClientCredentials.ClientID,
+		clientSecret: opts.ClientCredentials.ClientSecret,
+		authURL:      authURL,
+		streamURL:    streamURL,
+		httpClient:   opts.HTTPClient,
 	}
 }
 
@@ -42,6 +62,7 @@ type DefaultStreamkitClientFactory struct {
 	clientSecret string
 	authURL      string
 	streamURL    string
+	httpClient   *http.Client
 }
 
 // Get implements streamkit.ClientFactory.
@@ -72,7 +93,16 @@ func (f *DefaultStreamkitClientFactory) fetchJWT() (string, error) {
 		return "", err
 	}
 
-	resp, err := http.Post(f.authURL, "application/json", buf)
+	client := f.httpClient
+	if client == nil {
+		client = http.DefaultClient
+	}
+	req, err := http.NewRequest(http.MethodPost, f.authURL, buf)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
