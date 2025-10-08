@@ -15,6 +15,7 @@ jobs:
 
   publish:
     name: Publish and Notify Go Proxy
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
