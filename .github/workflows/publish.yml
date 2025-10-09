@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Checkout Full History
+      - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -36,6 +36,7 @@ jobs:
         uses: fgrzl/actions/tag-commit@v0.0.5
         with:
           tag: ${{ steps.version.outputs.semVer }}
+        continue-on-error: true
 
       - name: Notify Go Proxy
         uses: fgrzl/actions/notify-go-proxy@v0.0.5
