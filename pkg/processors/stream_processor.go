@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/fgrzl/collections"
@@ -88,6 +89,11 @@ type StreamProcessorBase struct {
 	flushOffset    func(context.Context, *ConsumerOffset) error
 	offset         *ConsumerOffset
 	batchSize      int
+	// lifecycle controls for the consumer goroutine
+	mu        sync.Mutex
+	runCancel context.CancelFunc
+	runDone   chan struct{}
+	running   bool
 }
 
 // NewStreamProcessorBase creates a new base processor with sensible defaults.
@@ -126,8 +132,11 @@ func (p *StreamProcessorBase) RegisterFlushOffset(flush func(context.Context, *C
 }
 
 // StartConsumer begins consuming events from registered stream spaces.
+//
+// StartConsumer is intentionally non-blocking: it applies any provided options
+// and launches the consumer loop in a new goroutine. The blocking work is
+// performed in runConsumer(ctx).
 func (p *StreamProcessorBase) StartConsumer(ctx context.Context, opts ...ConsumerOptions) error {
-
 	if p.spaces.Size() == 0 {
 		return nil
 	}
@@ -136,6 +145,72 @@ func (p *StreamProcessorBase) StartConsumer(ctx context.Context, opts ...Consume
 		opt(p)
 	}
 
+	p.mu.Lock()
+	if p.running {
+		p.mu.Unlock()
+		return nil
+	}
+	// create cancellable child context so Stop can cancel the consumer
+	childCtx, cancel := context.WithCancel(ctx)
+	p.runCancel = cancel
+	p.running = true
+	p.runDone = make(chan struct{})
+	p.mu.Unlock()
+
+	go func() {
+		defer func() {
+			// signal completion
+			p.mu.Lock()
+			if p.runDone != nil {
+				close(p.runDone)
+			}
+			p.running = false
+			p.runCancel = nil
+			p.runDone = nil
+			p.mu.Unlock()
+		}()
+		if err := p.runConsumer(childCtx); err != nil {
+			// log to stdout for now; projects can swap this for structured logging
+			fmt.Printf("stream processor run error: %v\n", err)
+		}
+	}()
+	return nil
+}
+
+// Stop cancels a running consumer (if any) and waits for it to finish. It
+// respects the provided context for timeout/cancellation while waiting.
+func (p *StreamProcessorBase) Stop(ctx context.Context) error {
+	p.mu.Lock()
+	if !p.running || p.runCancel == nil {
+		p.mu.Unlock()
+		return nil
+	}
+	// grab cancel and waitgroup, then unlock before canceling to avoid deadlock
+	cancel := p.runCancel
+	p.mu.Unlock()
+
+	// request shutdown
+	cancel()
+
+	// wait for run goroutine to exit or ctx cancellation
+	p.mu.Lock()
+	done := p.runDone
+	p.mu.Unlock()
+
+	if done == nil {
+		return nil
+	}
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+// runConsumer contains the blocking consumer loop previously in StartConsumer.
+func (p *StreamProcessorBase) runConsumer(ctx context.Context) error {
 	// If a loader was registered, try to load previously persisted offsets.
 	if p.loadOffset != nil {
 		off, err := p.loadOffset(ctx)
