@@ -3,6 +3,7 @@ package localstore
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
@@ -36,6 +37,7 @@ type credsFile struct {
 // Environment variables used: MESH_CLIENT_ID, MESH_CLIENT_SECRET, MESH_SEED
 func LoadOrCreateCreds(tenantID uuid.UUID) (ClientCredentials, error) {
 	if creds, ok := tryLoadFromEnv(); ok {
+		slog.Debug("loaded credentials from environment", "tenant_id", tenantID, "client_id", creds.ClientID)
 		return creds, nil
 	}
 
@@ -46,16 +48,24 @@ func LoadOrCreateCreds(tenantID uuid.UUID) (ClientCredentials, error) {
 	lockPath := path + ".lock"
 
 	if err := AcquireFileLock(lockPath); err != nil {
+		slog.Error("failed to acquire creds file lock", "lock_path", lockPath, "err", err)
 		return ClientCredentials{}, err
 	}
-	defer os.Remove(lockPath)
+	slog.Debug("acquired creds file lock", "lock_path", lockPath)
+	defer func() {
+		_ = os.Remove(lockPath)
+		slog.Debug("removed creds file lock", "lock_path", lockPath)
+	}()
 
 	creds, err := tryLoadFromFile(path)
 	if err == nil {
+		slog.Debug("loaded credentials from file", "path", path, "client_id", creds.ClientID)
 		return creds, nil
 	}
 
-	_ = os.Remove(path) // corrupted or invalid
+	slog.Warn("creds file missing or invalid, will recreate", "path", path, "err", err)
+	// Attempt to remove the corrupted file; ignore error
+	_ = os.Remove(path)
 	return createAndStoreCreds(path)
 }
 
@@ -75,8 +85,10 @@ func tryLoadFromEnv() (ClientCredentials, bool) {
 		// hex/base64, decode before calling FromSeed.
 		user, err := nkeys.FromSeed([]byte(seedStr))
 		if err != nil {
+			slog.Warn("invalid seed in environment", "err", err)
 			return ClientCredentials{}, false
 		}
+		slog.Info("using credentials from environment; ensure environment is secure", "client_id", clientID)
 		return ClientCredentials{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
@@ -90,16 +102,19 @@ func tryLoadFromEnv() (ClientCredentials, bool) {
 func tryLoadFromFile(path string) (ClientCredentials, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
+		slog.Debug("failed to read creds file", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("read creds file %s: %w", path, err)
 	}
 
 	var creds credsFile
 	if err := json.Unmarshal(data, &creds); err != nil {
+		slog.Error("invalid creds file format", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("unmarshal creds file %s: %w", path, err)
 	}
 
 	user, err := nkeys.FromSeed(creds.ClientSeed)
 	if err != nil {
+		slog.Error("invalid seed in creds file", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("invalid seed in creds file %s: %w", path, err)
 	}
 
@@ -111,13 +126,16 @@ func tryLoadFromFile(path string) (ClientCredentials, error) {
 }
 
 func createAndStoreCreds(path string) (ClientCredentials, error) {
+	slog.Info("creating new credentials file", "path", path)
 	user, err := nkeys.CreateUser()
 	if err != nil {
+		slog.Error("failed to create nkeys user", "err", err)
 		return ClientCredentials{}, err
 	}
 
 	seed, err := user.Seed()
 	if err != nil {
+		slog.Error("failed to obtain seed for nkeys user", "err", err)
 		return ClientCredentials{}, fmt.Errorf("seed user: %w", err)
 	}
 
@@ -133,8 +151,10 @@ func createAndStoreCreds(path string) (ClientCredentials, error) {
 	}
 
 	if err := os.WriteFile(path, data, 0600); err != nil {
+		slog.Error("failed to write creds file", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("write creds file %s: %w", path, err)
 	}
+	slog.Info("created credentials file", "path", path, "client_id", creds.ClientID)
 
 	return ClientCredentials{
 		ClientID:     creds.ClientID,
