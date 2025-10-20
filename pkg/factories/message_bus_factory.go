@@ -135,7 +135,7 @@ func (f *DefaultMessageBusFactory) fetchJWT(ctx context.Context) func() (string,
 			TenantID     uuid.UUID `json:"tenant_id"`
 			ClientID     uuid.UUID `json:"client_id"`
 			ClientSecret string    `json:"client_secret"`
-			UserPub      string    `json:"user_pub"`
+			UserPub      string    `json:"user_public_key"`
 		}
 
 		userPub, err := f.user.PublicKey()
