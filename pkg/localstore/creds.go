@@ -73,6 +73,17 @@ func tryLoadFromEnv() (ClientCredentials, bool) {
 	clientID, okID := env.TryGetEnvUUID(env.MeshClientID)
 	clientSecret, okSecret := env.TryGetEnvStr(env.MeshClientSecret)
 	if !okID || !okSecret {
+		// Provide hints about which env variables are missing/invalid without
+		// printing secrets or actual values.
+		if idStr, present := env.TryGetEnvStr(env.MeshClientID); !present {
+			slog.Debug("env client id not set", "key", env.MeshClientID)
+		} else if !okID {
+			// present but invalid UUID
+			slog.Warn("env client id present but invalid UUID", "key", env.MeshClientID, "value_len", len(idStr))
+		}
+		if _, present := env.TryGetEnvStr(env.MeshClientSecret); !present {
+			slog.Debug("env client credential not set", "key", env.MeshClientSecret)
+		}
 		return ClientCredentials{}, false
 	}
 	// Require an explicit seed when loading credentials from environment.
@@ -96,6 +107,8 @@ func tryLoadFromEnv() (ClientCredentials, bool) {
 		}, true
 	}
 
+	// Seed is required when loading from environment; log that it's missing
+	slog.Debug("env credentials incomplete: seed not set", "key", env.MeshClientSeed)
 	return ClientCredentials{}, false
 }
 
