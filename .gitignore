@@ -53,12 +53,18 @@ debug.test
 Thumbs.db
 .DS_Store
 
-# Local credentials and secrets
+# Local credentials and secrets (actual credential files, not code)
 *.pem
 *.key
 *.crt
-*credentials*
-*secrets*
+*.p12
+*.pfx
+.credentials
+.creds
+**/credentials.json
+**/secrets.json
+**/.env.credentials
+**/.env.secrets
 
 # Test coverage
 coverage.txt

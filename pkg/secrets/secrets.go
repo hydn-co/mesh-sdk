@@ -3,11 +3,27 @@ package secrets
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
 	"encoding/hex"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"golang.org/x/crypto/argon2"
 )
 
 const defaultLength = 32
 const defaultPinLength = 6
+
+const (
+	argonTime    = 3
+	argonMemory  = 64 * 1024 // KiB (64 MiB)
+	argonThreads = 2
+	argonKeyLen  = 32
+	saltLen      = 16
+)
 
 // Option configures secret generation.
 type Option func(*opts)
@@ -72,4 +88,65 @@ func GeneratePin(options ...Option) string {
 		pin[i] = byte('0' + n)
 	}
 	return string(pin)
+}
+
+// hashPasswordArgon2 hashes the password using Argon2id and returns a PHC string.
+func hashPasswordArgon2(password string) (string, error) {
+	salt := make([]byte, saltLen)
+	if _, err := rand.Read(salt); err != nil {
+		return "", err
+	}
+	hash := argon2.IDKey([]byte(password), salt, uint32(argonTime), uint32(argonMemory), uint8(argonThreads), uint32(argonKeyLen))
+	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
+	return fmt.Sprintf("$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s", argonMemory, argonTime, argonThreads, b64Salt, b64Hash), nil
+}
+
+// verifyPasswordArgon2 verifies the password against a PHC-formatted Argon2id string.
+func verifyPasswordArgon2(encoded, password string) (bool, error) {
+	parts := strings.Split(encoded, "$")
+	if len(parts) != 6 || parts[1] != "argon2id" {
+		return false, errors.New("invalid argon2id format")
+	}
+	// params in parts[3]
+	params := strings.Split(parts[3], ",")
+	var memory, time uint64
+	var threads int
+	for _, p := range params {
+		kv := strings.SplitN(p, "=", 2)
+		switch kv[0] {
+		case "m":
+			memory, _ = strconv.ParseUint(kv[1], 10, 32)
+		case "t":
+			time, _ = strconv.ParseUint(kv[1], 10, 32)
+		case "p":
+			pth, _ := strconv.Atoi(kv[1])
+			threads = pth
+		}
+	}
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
+	if err != nil {
+		return false, err
+	}
+	hash, err := base64.RawStdEncoding.DecodeString(parts[5])
+	if err != nil {
+		return false, err
+	}
+	calc := argon2.IDKey([]byte(password), salt, uint32(time), uint32(memory), uint8(threads), uint32(len(hash)))
+	if subtle.ConstantTimeCompare(calc, hash) == 1 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// HashPassword hashes the provided password using Argon2id (modern default).
+// Returns a PHC formatted hash string or an error.
+func HashPassword(password string) (string, error) {
+	return hashPasswordArgon2(password)
+}
+
+// CheckPasswordHash verifies an argon2id PHC string against the provided password.
+func CheckPasswordHash(password, hash string) bool {
+	ok, _ := verifyPasswordArgon2(hash, password)
+	return ok
 }

@@ -1,4 +1,4 @@
-package factories
+package auth
 
 import (
 	"crypto/rsa"

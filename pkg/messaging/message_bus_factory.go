@@ -1,4 +1,4 @@
-package factories
+package messaging
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 	"github.com/fgrzl/messaging"
 	"github.com/fgrzl/messaging/pkg/natsbus"
 	"github.com/google/uuid"
-	"github.com/hydn-co/mesh-sdk/pkg/localstore"
+	"github.com/hydn-co/mesh-sdk/pkg/auth/creds"
 	"github.com/nats-io/nkeys"
 )
 
@@ -27,7 +27,7 @@ import (
 // factory (for example AuthAttempts, AuthBaseDelay, MaxAuthRespBytes).
 type MessageBusOptions struct {
 	TenantID          uuid.UUID
-	ClientCredentials localstore.ClientCredentials
+	ClientCredentials creds.ClientCredentials
 	MessageBusAuthURL string
 	BrokerURL         string
 	// Optional HTTP client to use for auth requests. If nil, http.DefaultClient

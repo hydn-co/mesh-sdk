@@ -1,4 +1,4 @@
-package factories
+package pkg
 
 // ServiceKeys contains constants for dependency injection service keys
 // used throughout the web application for consistent service registration

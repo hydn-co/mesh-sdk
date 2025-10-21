@@ -1,4 +1,4 @@
-package localstore
+package creds
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hydn-co/mesh-sdk/pkg/env"
+	"github.com/hydn-co/mesh-sdk/pkg/localstore"
 	"github.com/hydn-co/mesh-sdk/pkg/secrets"
 	"github.com/nats-io/nkeys"
 )
@@ -41,13 +42,13 @@ func LoadOrCreateCreds(tenantID uuid.UUID) (ClientCredentials, error) {
 		return creds, nil
 	}
 
-	path, err := GetCredsPath(tenantID)
+	path, err := localstore.GetCredsPath(tenantID)
 	if err != nil {
 		return ClientCredentials{}, fmt.Errorf("get creds path: %w", err)
 	}
 	lockPath := path + ".lock"
 
-	if err := AcquireFileLock(lockPath); err != nil {
+	if err := localstore.AcquireFileLock(lockPath); err != nil {
 		slog.Error("failed to acquire creds file lock", "lock_path", lockPath, "err", err)
 		return ClientCredentials{}, err
 	}
@@ -88,28 +89,30 @@ func tryLoadFromEnv() (ClientCredentials, bool) {
 	}
 	// Require an explicit seed when loading credentials from environment.
 	// If MESH_SEED is not provided or invalid, treat env loading as absent
-	// so the caller will fall back to file-based credentials.
+	// so the caller will fall back to file-based creds.
+	// Use provided seed if available and valid; otherwise create a new user keypair.
 	if seedStr, ok := env.TryGetEnvStr(env.MeshClientSeed); ok {
-		// nkeys seed is typically a printable ASCII value. We accept
-		// the raw env string here; callers should provide the seed as
-		// produced by KeyPair.Seed(). If you store seeds encoded in
-		// hex/base64, decode before calling FromSeed.
 		user, err := nkeys.FromSeed([]byte(seedStr))
-		if err != nil {
-			slog.Warn("invalid seed in environment", "err", err)
-			return ClientCredentials{}, false
+		if err == nil {
+			slog.Info("using credentials from environment; ensure environment is secure", "client_id", clientID)
+			return ClientCredentials{ClientID: clientID, ClientSecret: clientSecret, User: user}, true
 		}
-		slog.Info("using credentials from environment; ensure environment is secure", "client_id", clientID)
-		return ClientCredentials{
-			ClientID:     clientID,
-			ClientSecret: clientSecret,
-			User:         user,
-		}, true
+		// If the seed is provided but invalid, log a warning and continue to
+		// create a fresh keypair. Do not fail; we still honor client id/secret.
+		slog.Warn("invalid seed in environment; generating ephemeral keypair", "err", err)
+	} else {
+		slog.Debug("env seed not provided; generating ephemeral keypair", "key", env.MeshClientSeed)
 	}
 
-	// Seed is required when loading from environment; log that it's missing
-	slog.Debug("env credentials incomplete: seed not set", "key", env.MeshClientSeed)
-	return ClientCredentials{}, false
+	// Create an ephemeral user keypair when seed is missing/invalid. The
+	// user will be used only for the current process and is not persisted.
+	user, err := nkeys.CreateUser()
+	if err != nil {
+		slog.Error("failed to generate ephemeral nkeys user", "err", err)
+		return ClientCredentials{}, false
+	}
+	slog.Info("using credentials from environment with generated ephemeral keypair; ensure environment is secure", "client_id", clientID)
+	return ClientCredentials{ClientID: clientID, ClientSecret: clientSecret, User: user}, true
 }
 
 func tryLoadFromFile(path string) (ClientCredentials, error) {

@@ -1,4 +1,4 @@
-package factories
+package messaging
 
 import (
 	"bytes"
@@ -12,8 +12,8 @@ import (
 	"github.com/fgrzl/streamkit"
 	"github.com/fgrzl/streamkit/pkg/transport/wskit"
 	"github.com/google/uuid"
+	"github.com/hydn-co/mesh-sdk/pkg/auth/creds"
 	"github.com/hydn-co/mesh-sdk/pkg/env"
-	"github.com/hydn-co/mesh-sdk/pkg/localstore"
 )
 
 // StreamkitClientOptions holds configuration for the streamkit client factory.
@@ -22,7 +22,7 @@ import (
 // (for example, AuthURL, StreamURL).
 type StreamkitClientOptions struct {
 	TenantID          uuid.UUID
-	ClientCredentials localstore.ClientCredentials
+	ClientCredentials creds.ClientCredentials
 	AuthURL           string
 	StreamURL         string
 	HTTPClient        *http.Client // Optional HTTP client for auth requests
