@@ -22,11 +22,31 @@ const (
 // - Linux:   $XDG_CONFIG_HOME/hyddenlabs/mesh or $HOME/.config/hyddenlabs/mesh
 // - Windows: %AppData%\hyddenlabs\mesh
 func GetBasePath() (string, error) {
+	configDir := getUserConfigDir()
+	return getOrCreatePath(filepath.Join(configDir, lsDirOrg, lsDirApp))
+}
+
+// getUserConfigDir returns the user config directory, respecting environment variables
+// for testing purposes. Checks XDG_CONFIG_HOME and APPDATA before falling back to os.UserConfigDir().
+func getUserConfigDir() string {
+	// Check XDG_CONFIG_HOME (Linux/macOS override for testing)
+	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
+		return xdg
+	}
+	// Check APPDATA (Windows override for testing)
+	if appData := os.Getenv("APPDATA"); appData != "" {
+		return appData
+	}
+	// Fall back to system default
 	configDir, err := os.UserConfigDir()
 	if err != nil {
-		return "", err
+		// If we can't get the user config dir, use a sensible default
+		if home, err := os.UserHomeDir(); err == nil {
+			return filepath.Join(home, ".config")
+		}
+		return "."
 	}
-	return getOrCreatePath(filepath.Join(configDir, lsDirOrg, lsDirApp))
+	return configDir
 }
 
 // GetConfigPath returns: <base config dir>/.config
