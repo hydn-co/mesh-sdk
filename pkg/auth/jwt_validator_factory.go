@@ -27,6 +27,13 @@ var (
 // recommended; this function implements a minimal, pragmatic approach for the
 // SDK.
 func GetValidator() (jwtkit.Validator, error) {
+	return GetValidatorWithClient(nil)
+}
+
+// GetValidatorWithClient returns a jwtkit.Validator backed by the auth-server's JWKS.
+// It accepts an optional HTTP client for custom transport configuration (e.g., TLS settings).
+// If client is nil, http.DefaultClient will be used.
+func GetValidatorWithClient(client *http.Client) (jwtkit.Validator, error) {
 	if pk := getCachedPublicKey(); pk != nil {
 		return &jwtkit.RSAValidator{PublicKey: pk}, nil
 	}
@@ -34,7 +41,7 @@ func GetValidator() (jwtkit.Validator, error) {
 	// Fetch JWKS from auth server well-known endpoint.
 	base := env.GetEnvOrDefaultStr(env.MeshAuthBaseURL, "http://localhost:8080")
 	jwksURL := strings.TrimRight(base, "/") + "/.well-known/jwks.json"
-	pk, err := fetchFirstRSAFromJWKS(jwksURL)
+	pk, err := fetchFirstRSAFromJWKS(jwksURL, client)
 	if err != nil {
 		return nil, fmt.Errorf("fetch jwks from %s: %w", jwksURL, err)
 	}
@@ -62,8 +69,13 @@ func setCachedPublicKey(pk *rsa.PublicKey) {
 // first RSA public key it contains. This helper is intentionally simple and
 // returns the first RSA key found; callers that require key rotation or
 // `kid` selection should replace this with a full JWKS client.
-func fetchFirstRSAFromJWKS(jwksURL string) (*rsa.PublicKey, error) {
-	resp, err := http.Get(jwksURL)
+// If client is nil, http.DefaultClient will be used.
+func fetchFirstRSAFromJWKS(jwksURL string, client *http.Client) (*rsa.PublicKey, error) {
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	resp, err := client.Get(jwksURL)
 	if err != nil {
 		return nil, err
 	}
