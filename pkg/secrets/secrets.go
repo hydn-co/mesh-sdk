@@ -150,3 +150,113 @@ func CheckPasswordHash(password, hash string) bool {
 	ok, _ := verifyPasswordArgon2(hash, password)
 	return ok
 }
+
+
+import (
+	"encoding/json"
+
+	"github.com/fgrzl/json/polymorphic"
+)
+
+func init() {
+	polymorphic.Register(func() *Secret { return &Secret{} })
+}
+
+// UI-facing struct
+type Secret struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Values      map[string]SecretValue `json:"values"`
+}
+
+func (r *Secret) GetDiscriminator() string {
+	return "mesh://catalog/v1/secrets/secret"
+}
+
+// Converts a plain Secret to a secure runtime representation
+func (s Secret) ToSecureSecret() SecureSecret {
+	out := SecureSecret{
+		ID:          s.ID,
+		Name:        s.Name,
+		Description: s.Description,
+		Values:      make(map[string]SecureSecretValue, len(s.Values)),
+	}
+	for key, val := range s.Values {
+		out.Values[key] = SecureSecretValue{
+			Value: NewSecureString(val.Value),
+		}
+	}
+	return out
+}
+
+// Individual value in a plain secret (string form)
+type SecretValue struct {
+	Value string `json:"value"`
+}
+
+// Always return masked value when serialized
+func (s SecretValue) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Value string `json:"value"`
+	}{
+		Value: "********",
+	})
+}
+
+// Secure, internal-use secret
+type SecureSecret struct {
+	ID          string                       `json:"id"`
+	Name        string                       `json:"name"`
+	Description string                       `json:"description"`
+	Values      map[string]SecureSecretValue `json:"values"`
+}
+
+// Converts back to a UI-facing secret (reveals actual values)
+func (s *SecureSecret) ToSecret() Secret {
+	out := Secret{
+		ID:          s.ID,
+		Name:        s.Name,
+		Description: s.Description,
+		Values:      make(map[string]SecretValue, len(s.Values)),
+	}
+	for key, val := range s.Values {
+		out.Values[key] = SecretValue{
+			Value: val.Value.Reveal(),
+		}
+	}
+	return out
+}
+
+// Explicitly zero out all secret bytes
+func (s *SecureSecret) Wipe() {
+	for _, v := range s.Values {
+		v.Value.Wipe()
+	}
+}
+
+// Value within a SecureSecret (stored securely)
+type SecureSecretValue struct {
+	Value SecureString `json:"value"`
+}
+
+// SecureString represents a mutable, wipeable []byte-based secret
+type SecureString []byte
+
+func NewSecureString(input string) SecureString {
+	return []byte(input)
+}
+
+func (s SecureString) String() string {
+	return "<masked>"
+}
+
+func (s SecureString) Reveal() string {
+	return string(s)
+}
+
+func (s SecureString) Wipe() {
+	for i := range s {
+		s[i] = 0
+	}
+}
