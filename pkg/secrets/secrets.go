@@ -6,11 +6,13 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/fgrzl/json/polymorphic"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -150,13 +152,6 @@ func CheckPasswordHash(password, hash string) bool {
 	ok, _ := verifyPasswordArgon2(hash, password)
 	return ok
 }
-
-
-import (
-	"encoding/json"
-
-	"github.com/fgrzl/json/polymorphic"
-)
 
 func init() {
 	polymorphic.Register(func() *Secret { return &Secret{} })
