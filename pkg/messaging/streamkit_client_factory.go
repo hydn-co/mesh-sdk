@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fgrzl/streamkit"
+	streamkit "github.com/fgrzl/streamkit/pkg/client"
 	"github.com/fgrzl/streamkit/pkg/transport/wskit"
 	"github.com/google/uuid"
 	"github.com/hydn-co/mesh-sdk/pkg/auth/creds"

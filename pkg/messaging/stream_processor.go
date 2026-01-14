@@ -11,8 +11,8 @@ import (
 	"github.com/fgrzl/enumerators"
 	"github.com/fgrzl/json/polymorphic"
 	"github.com/fgrzl/lexkey"
-	"github.com/fgrzl/streamkit"
 	"github.com/fgrzl/streamkit/pkg/api"
+	streamkit "github.com/fgrzl/streamkit/pkg/client"
 	"github.com/fgrzl/tickle"
 	"github.com/google/uuid"
 )

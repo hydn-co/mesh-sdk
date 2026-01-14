@@ -2,7 +2,7 @@ package messaging
 
 import (
 	"github.com/fgrzl/messaging"
-	"github.com/fgrzl/streamkit"
+	streamkit "github.com/fgrzl/streamkit/pkg/client"
 	"github.com/google/uuid"
 	"github.com/hydn-co/mesh-sdk/pkg/lifecycle"
 )
