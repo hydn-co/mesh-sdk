@@ -1,12 +1,12 @@
 module github.com/hydn-co/mesh-sdk
 
-go 1.24.5
+go 1.25.4
 
 require (
 	github.com/fgrzl/claims v0.0.1-alpha.22
 	github.com/fgrzl/es v0.0.1-alpha.36
 	github.com/fgrzl/json v0.1.0-alpha.62
-	github.com/fgrzl/messaging v0.0.1-alpha.76
+	github.com/fgrzl/messaging v1.0.0-alpha.4
 	github.com/fgrzl/streamkit v0.0.1-alpha.78
 	github.com/fgrzl/tickle v0.0.1-alpha.7
 	github.com/google/uuid v1.6.0
