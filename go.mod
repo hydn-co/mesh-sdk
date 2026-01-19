@@ -1,6 +1,6 @@
 module github.com/hydn-co/mesh-sdk
 
-go 1.24.5
+go 1.25.4
 
 require (
 	github.com/fgrzl/claims v0.0.1-alpha.22
@@ -22,7 +22,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fgrzl/collections v0.1.0-alpha.11
-	github.com/fgrzl/enumerators v0.1.0-alpha.47
+	github.com/fgrzl/enumerators v1.0.0-alpha.3
 	github.com/fgrzl/lexkey v0.1.0-alpha.35
 	github.com/fgrzl/mux v0.0.1-alpha.140 // indirect
 	github.com/fgrzl/telemetry v0.1.0-alpha.9 // indirect

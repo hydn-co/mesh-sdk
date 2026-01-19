@@ -18,8 +18,8 @@ github.com/fgrzl/claims v0.0.1-alpha.22 h1:L2Xv8mTuH24X3mA640cKyWUwkCImtXfhrPodr
 github.com/fgrzl/claims v0.0.1-alpha.22/go.mod h1:pkdT+RIMZGF8ij7zhVicPHNuKZA5fLOD9p6viVXjcH4=
 github.com/fgrzl/collections v0.1.0-alpha.11 h1:uwNQobFRRYt+QkOVDYUB3Xkkr0QylrP+5h7N9JwsPZ8=
 github.com/fgrzl/collections v0.1.0-alpha.11/go.mod h1:Pk1bIk6x8Kr7U6apj4XdBwpF3uagSrutmQb140QFM/4=
-github.com/fgrzl/enumerators v0.1.0-alpha.47 h1:b9NjtwnEeuN+fz1Q2Vg+y+t3jS3UNXjQaBZjS/sjHvY=
-github.com/fgrzl/enumerators v0.1.0-alpha.47/go.mod h1:bXqp3z9k9d7Z9sfMl7x86pWm+FcjkkK/m4ryx93S5Q4=
+github.com/fgrzl/enumerators v1.0.0-alpha.3 h1:HsAlKt+DHFKZaO0Lq7wnhPgtrGdYmWFMBOSwNYdV5GQ=
+github.com/fgrzl/enumerators v1.0.0-alpha.3/go.mod h1:feeP9+rknaUYQ8TQwycW1lLX9JdOrWRgr22pu1j5lP4=
 github.com/fgrzl/es v0.0.1-alpha.36 h1:RjFqPafnexM4siBHcwDaG3mq80sZ5eogokIVndQhQ6Y=
 github.com/fgrzl/es v0.0.1-alpha.36/go.mod h1:5AP74uoI7gSYeMj2tv1fyDfY6l/w13WPErgi5zNQAsM=
 github.com/fgrzl/json v0.1.0-alpha.62 h1:9b5AqJHVGBgQUbT7aSEHE7frARG5IwBqXNyIpSVnUB0=
