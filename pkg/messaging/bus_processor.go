@@ -56,7 +56,8 @@ type MessageBusProcessor interface {
 
 type MessageBusProcessorBase struct {
 	SubscriptionTracker
-	bus messaging.MessageBus
+	bus     messaging.MessageBus
+	monitor *RequestHandlerMonitor
 }
 
 func NewMessageBusProcessorBase(bus messaging.MessageBus) *MessageBusProcessorBase {
@@ -78,10 +79,27 @@ func (p *MessageBusProcessorBase) RegisterMessageHandler(
 	return sub, nil
 }
 
+func (p *MessageBusProcessorBase) EnableRequestMonitoring(ctx context.Context) {
+	if p.monitor == nil {
+		p.monitor = NewRequestHandlerMonitor(ctx, p.bus)
+	}
+}
+
 func (p *MessageBusProcessorBase) RegisterRequestHandler(
 	route messaging.Route,
 	handler messaging.RequestHandler,
 ) (messaging.Subscription, error) {
+	// If monitoring is enabled, use the monitor
+	if p.monitor != nil {
+		sub, err := p.monitor.Register(route, handler)
+		if err != nil {
+			return nil, err
+		}
+		p.Track(sub)
+		return sub, nil
+	}
+
+	// Otherwise use regular subscription
 	sub, err := p.bus.SubscribeRequest(route, handler)
 	if err != nil {
 		return nil, err
@@ -105,4 +123,11 @@ func (p *MessageBusProcessorBase) CurrentUserID(ctx context.Context) (uuid.UUID,
 		return uuid.Nil, false
 	}
 	return id, true
+}
+
+func (p *MessageBusProcessorBase) Shutdown(ctx context.Context) error {
+	if p.monitor != nil {
+		p.monitor.Stop()
+	}
+	return p.SubscriptionTracker.Shutdown(ctx)
 }
