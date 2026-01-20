@@ -10,7 +10,7 @@ require (
 	github.com/fgrzl/json v0.1.0-alpha.62
 	github.com/fgrzl/lexkey v0.1.0-alpha.35
 	github.com/fgrzl/messaging v1.0.0-alpha.7
-	github.com/fgrzl/streamkit v1.0.0-alpha.5
+	github.com/fgrzl/streamkit v1.0.0-alpha.6
 	github.com/fgrzl/tickle v0.0.1-alpha.7
 	github.com/google/uuid v1.6.0
 	github.com/nats-io/nkeys v0.4.12

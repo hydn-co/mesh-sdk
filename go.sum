@@ -30,8 +30,8 @@ github.com/fgrzl/messaging v1.0.0-alpha.7 h1:nZAiO2RGwEhZ3D1l52WBoqcDhMpX5TNt2fU
 github.com/fgrzl/messaging v1.0.0-alpha.7/go.mod h1:6ZfUgoluufDl6H+EryOoGxWrUBJhbllwtFAF0tk82yc=
 github.com/fgrzl/mux v0.0.1-alpha.140 h1:rxrSXN9JPRX3prEZsLZLhxhZCK4lEBB5H1u2nCP5vUk=
 github.com/fgrzl/mux v0.0.1-alpha.140/go.mod h1:a7d2HYuPIIoTiTqa8ru9mg21Qtl8DzyT1+MU+8Cmgx0=
-github.com/fgrzl/streamkit v1.0.0-alpha.5 h1:I0TotxlImkjCBKxhJAz+rBB5sx1JZ+qOVf14ub15J5s=
-github.com/fgrzl/streamkit v1.0.0-alpha.5/go.mod h1:5IEse+MtKw+hDqGexOadQ37ygMkr564EwaKsWXddLr4=
+github.com/fgrzl/streamkit v1.0.0-alpha.6 h1:3E4qFqiK0rVzGa45pWoShu073VKib5z8Lzqlq9DKRBs=
+github.com/fgrzl/streamkit v1.0.0-alpha.6/go.mod h1:5IEse+MtKw+hDqGexOadQ37ygMkr564EwaKsWXddLr4=
 github.com/fgrzl/telemetry v0.1.0-alpha.9 h1:pv8bfH66JP5P+MkqtKlCeyOTBJh+aThLLg1J5edB+Q8=
 github.com/fgrzl/telemetry v0.1.0-alpha.9/go.mod h1:gREmdSzbG2GSupTpSymib6y2QByRRf8LD07YqSMsNi0=
 github.com/fgrzl/tickle v0.0.1-alpha.7 h1:7mdSkHd3qX0w7t4Hm29HC8dKDR8ou14c1CYORomVeuw=
