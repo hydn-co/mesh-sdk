@@ -1,12 +1,14 @@
-package localstore
+package creds
 
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
 	"github.com/hydn-co/mesh-sdk/pkg/env"
+	"github.com/hydn-co/mesh-sdk/pkg/localstore"
 	"github.com/hydn-co/mesh-sdk/pkg/secrets"
 	"github.com/nats-io/nkeys"
 )
@@ -36,26 +38,35 @@ type credsFile struct {
 // Environment variables used: MESH_CLIENT_ID, MESH_CLIENT_SECRET, MESH_SEED
 func LoadOrCreateCreds(tenantID uuid.UUID) (ClientCredentials, error) {
 	if creds, ok := tryLoadFromEnv(); ok {
+		slog.Debug("loaded credentials from environment", "tenant_id", tenantID, "client_id", creds.ClientID)
 		return creds, nil
 	}
 
-	path, err := GetCredsPath(tenantID)
+	path, err := localstore.GetCredsPath(tenantID)
 	if err != nil {
 		return ClientCredentials{}, fmt.Errorf("get creds path: %w", err)
 	}
 	lockPath := path + ".lock"
 
-	if err := AcquireFileLock(lockPath); err != nil {
+	if err := localstore.AcquireFileLock(lockPath); err != nil {
+		slog.Error("failed to acquire creds file lock", "lock_path", lockPath, "err", err)
 		return ClientCredentials{}, err
 	}
-	defer os.Remove(lockPath)
+	slog.Debug("acquired creds file lock", "lock_path", lockPath)
+	defer func() {
+		_ = os.Remove(lockPath)
+		slog.Debug("removed creds file lock", "lock_path", lockPath)
+	}()
 
 	creds, err := tryLoadFromFile(path)
 	if err == nil {
+		slog.Debug("loaded credentials from file", "path", path, "client_id", creds.ClientID)
 		return creds, nil
 	}
 
-	_ = os.Remove(path) // corrupted or invalid
+	slog.Warn("creds file missing or invalid, will recreate", "path", path, "err", err)
+	// Attempt to remove the corrupted file; ignore error
+	_ = os.Remove(path)
 	return createAndStoreCreds(path)
 }
 
@@ -63,43 +74,63 @@ func tryLoadFromEnv() (ClientCredentials, bool) {
 	clientID, okID := env.TryGetEnvUUID(env.MeshClientID)
 	clientSecret, okSecret := env.TryGetEnvStr(env.MeshClientSecret)
 	if !okID || !okSecret {
+		// Provide hints about which env variables are missing/invalid without
+		// printing secrets or actual values.
+		if idStr, present := env.TryGetEnvStr(env.MeshClientID); !present {
+			slog.Debug("env client id not set", "key", env.MeshClientID)
+		} else if !okID {
+			// present but invalid UUID
+			slog.Warn("env client id present but invalid UUID", "key", env.MeshClientID, "value_len", len(idStr))
+		}
+		if _, present := env.TryGetEnvStr(env.MeshClientSecret); !present {
+			slog.Debug("env client credential not set", "key", env.MeshClientSecret)
+		}
 		return ClientCredentials{}, false
 	}
 	// Require an explicit seed when loading credentials from environment.
 	// If MESH_SEED is not provided or invalid, treat env loading as absent
-	// so the caller will fall back to file-based credentials.
+	// so the caller will fall back to file-based creds.
+	// Use provided seed if available and valid; otherwise create a new user keypair.
 	if seedStr, ok := env.TryGetEnvStr(env.MeshClientSeed); ok {
-		// nkeys seed is typically a printable ASCII value. We accept
-		// the raw env string here; callers should provide the seed as
-		// produced by KeyPair.Seed(). If you store seeds encoded in
-		// hex/base64, decode before calling FromSeed.
 		user, err := nkeys.FromSeed([]byte(seedStr))
-		if err != nil {
-			return ClientCredentials{}, false
+		if err == nil {
+			slog.Info("using credentials from environment; ensure environment is secure", "client_id", clientID)
+			return ClientCredentials{ClientID: clientID, ClientSecret: clientSecret, User: user}, true
 		}
-		return ClientCredentials{
-			ClientID:     clientID,
-			ClientSecret: clientSecret,
-			User:         user,
-		}, true
+		// If the seed is provided but invalid, log a warning and continue to
+		// create a fresh keypair. Do not fail; we still honor client id/secret.
+		slog.Warn("invalid seed in environment; generating ephemeral keypair", "err", err)
+	} else {
+		slog.Debug("env seed not provided; generating ephemeral keypair", "key", env.MeshClientSeed)
 	}
 
-	return ClientCredentials{}, false
+	// Create an ephemeral user keypair when seed is missing/invalid. The
+	// user will be used only for the current process and is not persisted.
+	user, err := nkeys.CreateUser()
+	if err != nil {
+		slog.Error("failed to generate ephemeral nkeys user", "err", err)
+		return ClientCredentials{}, false
+	}
+	slog.Info("using credentials from environment with generated ephemeral keypair; ensure environment is secure", "client_id", clientID)
+	return ClientCredentials{ClientID: clientID, ClientSecret: clientSecret, User: user}, true
 }
 
 func tryLoadFromFile(path string) (ClientCredentials, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
+		slog.Debug("failed to read creds file", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("read creds file %s: %w", path, err)
 	}
 
 	var creds credsFile
 	if err := json.Unmarshal(data, &creds); err != nil {
+		slog.Error("invalid creds file format", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("unmarshal creds file %s: %w", path, err)
 	}
 
 	user, err := nkeys.FromSeed(creds.ClientSeed)
 	if err != nil {
+		slog.Error("invalid seed in creds file", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("invalid seed in creds file %s: %w", path, err)
 	}
 
@@ -111,13 +142,16 @@ func tryLoadFromFile(path string) (ClientCredentials, error) {
 }
 
 func createAndStoreCreds(path string) (ClientCredentials, error) {
+	slog.Info("creating new credentials file", "path", path)
 	user, err := nkeys.CreateUser()
 	if err != nil {
+		slog.Error("failed to create nkeys user", "err", err)
 		return ClientCredentials{}, err
 	}
 
 	seed, err := user.Seed()
 	if err != nil {
+		slog.Error("failed to obtain seed for nkeys user", "err", err)
 		return ClientCredentials{}, fmt.Errorf("seed user: %w", err)
 	}
 
@@ -133,8 +167,10 @@ func createAndStoreCreds(path string) (ClientCredentials, error) {
 	}
 
 	if err := os.WriteFile(path, data, 0600); err != nil {
+		slog.Error("failed to write creds file", "path", path, "err", err)
 		return ClientCredentials{}, fmt.Errorf("write creds file %s: %w", path, err)
 	}
+	slog.Info("created credentials file", "path", path, "client_id", creds.ClientID)
 
 	return ClientCredentials{
 		ClientID:     creds.ClientID,

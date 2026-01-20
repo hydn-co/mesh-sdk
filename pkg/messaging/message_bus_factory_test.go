@@ -1,4 +1,4 @@
-package factories
+package messaging
 
 import (
 	"context"

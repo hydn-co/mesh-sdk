@@ -5,25 +5,24 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hydn-co/mesh-sdk/pkg/meshctx"
-	"github.com/hydn-co/mesh-sdk/pkg/runner"
 	"github.com/stretchr/testify/assert"
 )
 
 // InvokeDescribe runs the runner with -describe and fails the test if the
 // runner returns an error. It sets up a temporary stream path in the test
 // context before invoking the runner.
-func InvokeDescribe(t *testing.T, manifest *runner.Manifest) {
+func InvokeDescribe(t *testing.T, manifest *Manifest) {
 	t.Helper()
 	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
 
-	err := runner.RunWithArgs(ctx, manifest, "-describe")
+	err := RunWithArgs(ctx, manifest, "-describe")
 	assert.NoError(t, err)
 }
 
 // InvokeList runs the runner with -list, captures stdout, and asserts that the
 // manifest capabilities are present in the output. This helper is intended for
 // test assertions and will fail the test on error.
-func InvokeList(t *testing.T, manifest *runner.Manifest) {
+func InvokeList(t *testing.T, manifest *Manifest) {
 	t.Helper()
 	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
 
@@ -34,7 +33,7 @@ func InvokeList(t *testing.T, manifest *runner.Manifest) {
 	}
 
 	output, err := CaptureOutput(func() error {
-		return runner.RunWithArgs(ctx, manifest, "-list")
+		return RunWithArgs(ctx, manifest, "-list")
 	})
 	assert.NoError(t, err)
 
@@ -50,11 +49,11 @@ func InvokeList(t *testing.T, manifest *runner.Manifest) {
 // Example usage:
 //
 //	testkit.InvokeGenerate(t, manifest, "capability-id", connectorID, secretID)
-func InvokeGenerate(t *testing.T, manifest *runner.Manifest, capability, connectorID, secretID string) {
+func InvokeGenerate(t *testing.T, manifest *Manifest, capability, connectorID, secretID string) {
 	t.Helper()
 	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
 
-	err := runner.RunWithArgs(ctx, manifest,
+	err := RunWithArgs(ctx, manifest,
 		"-generate",
 		"-capability", capability,
 		"-connector-id", connectorID,
@@ -65,10 +64,10 @@ func InvokeGenerate(t *testing.T, manifest *runner.Manifest, capability, connect
 
 // InvokeRun runs the runner for the given capability and connector using a mock tenant.
 // It fails the test on error. This helper is useful for smoke tests of runtime behavior.
-func InvokeRun(t *testing.T, manifest *runner.Manifest, capability, connectorID string) {
+func InvokeRun(t *testing.T, manifest *Manifest, capability, connectorID string) {
 	t.Helper()
 	ctx := meshctx.WithStreamPath(t.Context(), t.TempDir())
-	err := runner.RunWithArgs(ctx, manifest,
+	err := RunWithArgs(ctx, manifest,
 		"-run",
 		"-capability", capability,
 		"-connector-id", connectorID,
