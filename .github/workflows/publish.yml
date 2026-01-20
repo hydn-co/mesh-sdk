@@ -8,6 +8,11 @@ permissions:
   packages: read
 
 jobs:
+  version:
+    name: Version
+    uses: ./.github/workflows/version.yml
+    secrets: inherit
+
   build:
     name: Build and Test
     uses: ./.github/workflows/ci.yml
@@ -15,33 +20,25 @@ jobs:
 
   publish:
     name: Publish and Notify Go Proxy
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v4.1.0
-
-      - name: Calculate Version
-        id: version
-        uses: gittools/actions/gitversion/execute@v4.1.0
+        uses: actions/checkout@v6
 
       - name: Tag Commit
-        uses: fgrzl/actions/tag-commit@v0.0.5
+        uses: hydn-co/build-tools/.github/actions/create-tag@main
         with:
-          tag: ${{ steps.version.outputs.semVer }}
+          semver: ${{ needs.version.outputs.semVer }}
         continue-on-error: true
 
-      - name: Notify Go Proxy
-        uses: fgrzl/actions/notify-go-proxy@v0.0.5
-        with:
-          tag: ${{ steps.version.outputs.semVer }}
-
-      - name: Prune Pre-release Tags
-        uses: fgrzl/actions/prune-tags@v0.0.5
+      - name: Trigger Go package registry
+        env:
+          MODULE_PATH: github.com/hydn-co/mesh-sdk
+          VERSION: ${{ needs.version.outputs.semVer }}
+        run: |
+          echo "Triggering Go proxy for ${MODULE_PATH}@${VERSION}"
+          # Request module info to prompt Go proxies to fetch the new version
+          curl -sf "https://proxy.golang.org/${MODULE_PATH}/@v/${VERSION}.info" -o /dev/null || true

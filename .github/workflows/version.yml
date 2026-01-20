@@ -2,6 +2,20 @@ name: Version
 
 on:
   workflow_dispatch:
+  workflow_call:
+    outputs:
+      semVer:
+        description: "Full semantic version"
+        value: ${{ jobs.version.outputs.semVer }}
+      major:
+        description: "Major version"
+        value: ${{ jobs.version.outputs.major }}
+      minor:
+        description: "Minor version"
+        value: ${{ jobs.version.outputs.minor }}
+      patch:
+        description: "Patch version"
+        value: ${{ jobs.version.outputs.patch }}
 
 permissions:
   contents: write
@@ -12,16 +26,21 @@ jobs:
     name: Version
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      semVer: ${{ steps.version.outputs.semVer }}
+      major: ${{ steps.version.outputs.major }}
+      minor: ${{ steps.version.outputs.minor }}
+      patch: ${{ steps.version.outputs.patch }}
 
     steps:
       - name: Checkout Full History
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v4.1.0
+        uses: gittools/actions/gitversion/setup@v4.2.0
 
       - name: Calculate Version
         id: version
-        uses: gittools/actions/gitversion/execute@v4.1.0
+        uses: gittools/actions/gitversion/execute@v4.2.0
