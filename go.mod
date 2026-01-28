@@ -1,16 +1,16 @@
 module github.com/hydn-co/mesh-sdk
 
-go 1.25.4
+go 1.25.6
 
 require (
 	github.com/fgrzl/claims v0.0.1-alpha.22
 	github.com/fgrzl/collections v0.1.0-alpha.11
 	github.com/fgrzl/enumerators v1.0.0-alpha.3
 	github.com/fgrzl/es v0.0.1-alpha.36
-	github.com/fgrzl/json v0.1.0-alpha.62
+	github.com/fgrzl/json v1.0.0-alpha.5
 	github.com/fgrzl/lexkey v0.1.0-alpha.35
 	github.com/fgrzl/messaging v1.0.0-alpha.7
-	github.com/fgrzl/streamkit v1.0.0-alpha.6
+	github.com/fgrzl/streamkit v1.0.0-alpha.11
 	github.com/fgrzl/tickle v0.0.1-alpha.7
 	github.com/google/uuid v1.6.0
 	github.com/nats-io/nkeys v0.4.12
@@ -23,7 +23,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fgrzl/mux v0.0.1-alpha.140 // indirect
+	github.com/fgrzl/mux v0.0.1-alpha.158 // indirect
 	github.com/fgrzl/telemetry v0.1.0-alpha.9 // indirect
 	github.com/fgrzl/timestamp v1.0.0-alpha.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
