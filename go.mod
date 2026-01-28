@@ -13,7 +13,7 @@ require (
 	github.com/fgrzl/streamkit v1.0.0-alpha.6
 	github.com/fgrzl/tickle v0.0.1-alpha.7
 	github.com/google/uuid v1.6.0
-	github.com/nats-io/nkeys v0.4.12
+	github.com/nats-io/nkeys v0.4.14
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.47.0
 )
